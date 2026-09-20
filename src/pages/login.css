@@ -1,0 +1,82 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8f8f8;
+}
+
+.login-box {
+  width: 400px;
+  max-width: 90%;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+}
+
+.login-logo {
+  display: block;
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #222;
+  margin-bottom: 30px;
+}
+
+.login-logo span {
+  color: #ff5a1f;
+}
+
+.login-box h1 {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.login-box > p {
+  text-align: center;
+  color: #777;
+  margin-bottom: 30px;
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-box label {
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.login-box input {
+  padding: 13px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.login-box button {
+  margin-top: 15px;
+  padding: 14px;
+  border: none;
+  border-radius: 6px;
+  background: #ff5a1f;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 25px;
+  color: #666;
+}
+
+.register-link a {
+  color: #ff5a1f;
+  text-decoration: none;
+  font-weight: 600;
+}

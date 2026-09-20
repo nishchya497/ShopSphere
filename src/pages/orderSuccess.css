@@ -1,0 +1,82 @@
+.success-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f7f7f7;
+  padding: 20px;
+}
+
+.success-box {
+  width: 100%;
+  max-width: 550px;
+  background: white;
+  padding: 45px 35px;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+}
+
+.success-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #22c55e;
+  color: white;
+  font-size: 42px;
+  line-height: 70px;
+  font-weight: bold;
+}
+
+.success-box h1 {
+  margin-bottom: 10px;
+  font-size: 30px;
+}
+
+.success-message {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.order-info {
+  background: #f8f8f8;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.order-info p {
+  margin: 10px 0;
+}
+
+.success-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.continue-btn,
+.home-btn {
+  padding: 12px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.continue-btn {
+  background: #ff5a1f;
+  color: white;
+}
+
+.home-btn {
+  background: #eee;
+  color: #333;
+}
+
+@media (max-width: 600px) {
+  .success-buttons {
+    flex-direction: column;
+  }
+}
