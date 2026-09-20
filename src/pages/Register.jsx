@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 import "./register.css";
 
 function Register() {
@@ -13,6 +14,8 @@ function Register() {
     confirmPassword: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -20,7 +23,7 @@ function Register() {
     });
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
@@ -28,8 +31,38 @@ function Register() {
       return;
     }
 
-    alert("Registration successful! 🎉");
-    navigate("/login");
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            name: form.name,
+            phone: form.phone,
+          },
+        },
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      console.log("Registered user:", data);
+
+      alert(
+        "Registration successful! 🎉\nPlease check your email to verify your account."
+      );
+
+      navigate("/login");
+    } catch (error) {
+      alert("Something went wrong. Please try again.");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,8 +128,8 @@ function Register() {
             required
           />
 
-          <button type="submit">
-            Create Account
+          <button type="submit" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
         </form>

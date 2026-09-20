@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 import "./login.css";
 
 function Login() {
@@ -7,8 +8,9 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -16,9 +18,30 @@ function Login() {
       return;
     }
 
-    alert("Login successful! 🎉");
+    try {
+      setLoading(true);
 
-    navigate("/");
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      console.log("Logged in user:", data.user);
+
+      alert("Login successful! 🎉");
+
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,8 +79,8 @@ function Login() {
             required
           />
 
-          <button type="submit">
-            Login
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
 
         </form>

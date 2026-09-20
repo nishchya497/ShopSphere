@@ -1,3 +1,4 @@
+import { supabase } from "./supabaseClient";
 import OrderSuccess from "./pages/OrderSuccess";
 import Wishlist from "./pages/Wishlist";
 import ProductDetails from "./pages/ProductDetails"
@@ -5,7 +6,7 @@ import Register from "./pages/Register"
 import Login from "./pages/Login"
 import Checkout from "./pages/Checkout"
 import Cart from "./pages/Cart"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Products from "./pages/products";
@@ -292,8 +293,22 @@ function Home({ cart, setCart,wishlist,
 }
 
 function App() {
+  const [session, setSession] = useState(null);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+    useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   const cartCount = cart.reduce(
   (total, item) => total + item.quantity,
   0
