@@ -372,6 +372,7 @@ function App() {
             <Wishlist
               wishlist={wishlist}
               setWishlist={setWishlist}
+              session={session}
             />
           }
         />

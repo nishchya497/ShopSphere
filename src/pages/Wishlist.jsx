@@ -1,7 +1,17 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import "./wishlist.css";
 
-function Wishlist({ wishlist, setWishlist }) {
+function Wishlist({ wishlist, setWishlist, session }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!session) {
+      alert("Please login to view your wishlist.");
+      navigate("/login");
+    }
+  }, [session, navigate]);
+
   const removeFromWishlist = (id) => {
     setWishlist(
       wishlist.filter((item) => item.id !== id)
