@@ -390,6 +390,7 @@ function App() {
             <Cart
               cart={cart}
               setCart={setCart}
+              session={session}
             />
           }
         />

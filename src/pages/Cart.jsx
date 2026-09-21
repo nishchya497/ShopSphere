@@ -1,7 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate  } from "react-router-dom";
+import { useEffect } from "react";
 import "./cart.css";
 
-function Cart({ cart, setCart }) {
+function Cart({ cart, setCart, session }) {
+    const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!session) {
+      alert("Please login to view your cart.");
+      navigate("/login");
+    }
+  }, [session, navigate]);
 
   const increaseQuantity = (index) => {
     const updatedCart = [...cart];
