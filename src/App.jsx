@@ -47,7 +47,7 @@ const products = [
 ];
 
 function Home({ cart, setCart,wishlist,
-  setWishlist,cartCount }) {
+  setWishlist,cartCount,session }) {
     const [search, setSearch] = useState("");
   return (
     <div className="app">
@@ -70,7 +70,17 @@ function Home({ cart, setCart,wishlist,
         <div className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/products">Products</Link>
-          <Link to="/login">Login</Link>
+          {session ? (
+  <button
+    onClick={async () => {
+      await supabase.auth.signOut();
+    }}
+  >
+    Logout
+  </button>
+) : (
+  <Link to="/login">Login</Link>
+)}
           <Link to="/wishlist">
   ❤️ Wishlist
 </Link>
@@ -326,6 +336,7 @@ function App() {
       wishlist={wishlist}
       setWishlist={setWishlist}
       cartCount={cartCount}
+      session={session}
     />
   }
 />
