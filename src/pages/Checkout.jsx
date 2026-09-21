@@ -1,10 +1,15 @@
-import "./checkout.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./checkout.css";
 
-function Checkout({ cart, setCart }) {
+function Checkout({ cart, setCart, session }) {
   const navigate = useNavigate();
+    useEffect(() => {
+    if (!session) {
+      alert("Please login to proceed to checkout.");
+      navigate("/login");
+    }
+  }, [session, navigate]);
 
   const [form, setForm] = useState({
     name: "",

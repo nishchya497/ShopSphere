@@ -382,6 +382,7 @@ function App() {
             <Checkout
               cart={cart}
               setCart={setCart}
+              session={session}
             />
           }
         />
