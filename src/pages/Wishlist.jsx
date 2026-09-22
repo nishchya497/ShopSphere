@@ -1,22 +1,41 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { supabase } from "../supabaseClient";
 import "./wishlist.css";
 
-function Wishlist({ wishlist, setWishlist, session }) {
+function Wishlist({ wishlist, setWishlist, session, authLoading }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!session) {
-      alert("Please login to view your wishlist.");
-      navigate("/login");
-    }
-  }, [session, navigate]);
+  if (authLoading) return;
 
-  const removeFromWishlist = (id) => {
-    setWishlist(
-      wishlist.filter((item) => item.id !== id)
-    );
-  };
+  if (!session) {
+    alert("Please login to view your wishlist.");
+    navigate("/login");
+  }
+}, [session, authLoading, navigate]);
+
+  const removeFromWishlist = async (id) => {
+  if (!session) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("wishlist")
+    .delete()
+    .eq("user_id", session.user.id)
+    .eq("product_id", id);
+
+  if (error) {
+    console.error("Error removing from wishlist:", error);
+    alert("Could not remove product from wishlist.");
+    return;
+  }
+
+  setWishlist(
+    wishlist.filter((item) => item.id !== id)
+  );
+};
 
   return (
     <div className="wishlist-page">

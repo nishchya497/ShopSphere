@@ -11,44 +11,76 @@ import "./App.css";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Products from "./pages/products";
 
-const products = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 1999,
-    category: "Electronics",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600",
-  },
-  {
-    id: 2,
-    name: "Smart Watch",
-    price: 2499,
-    category: "Electronics",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600",
-  },
-  {
-    id: 3,
-    name: "Running Shoes",
-    price: 1799,
-    category: "Fashion",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
-  },
-  {
-    id: 4,
-    name: "Backpack",
-    price: 999,
-    category: "Accessories",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600",
-  },
-];
 
-function Home({ cart, setCart,wishlist,
-  setWishlist,cartCount,session }) {
-    const [search, setSearch] = useState("");
+
+function Home({
+  products,
+  cart,
+  setCart,
+  wishlist,
+  setWishlist,
+  cartCount,
+  session,
+}) {
+  const [search, setSearch] = useState("");
+  const addToCart = async (product) => {
+    if (!session) {
+      alert("Please login to add products to cart.");
+      return;
+    }
+
+    const existingProduct = cart.find(
+      (item) => item.id === product.id
+    );
+
+    if (existingProduct) {
+      const newQuantity = existingProduct.quantity + 1;
+
+      const { error } = await supabase
+        .from("cart")
+        .update({ quantity: newQuantity })
+        .eq("user_id", session.user.id)
+        .eq("product_id", product.id);
+
+      if (error) {
+        console.error("Error updating cart:", error);
+        alert("Could not update cart.");
+        return;
+      }
+
+      setCart(
+        cart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+    } else {
+      const { error } = await supabase
+        .from("cart")
+        .insert({
+          user_id: session.user.id,
+          product_id: product.id,
+          quantity: 1,
+        });
+
+      if (error) {
+        console.error("Error adding to cart:", error);
+        alert("Could not add product to cart.");
+        return;
+      }
+
+      setCart([
+        ...cart,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ]);
+    }
+
+    alert("Product added to cart! 🛒");
+  };
   return (
     <div className="app">
       {/* Navbar */}
@@ -59,11 +91,11 @@ function Home({ cart, setCart,wishlist,
 
         <div className="search">
           <input
-  type="text"
-  placeholder="Search products..."
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-/>
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
           <button>🔍</button>
         </div>
 
@@ -71,22 +103,22 @@ function Home({ cart, setCart,wishlist,
           <Link to="/">Home</Link>
           <Link to="/products">Products</Link>
           {session ? (
-  <button
-    onClick={async () => {
-      await supabase.auth.signOut();
-    }}
-  >
-    Logout
-  </button>
-) : (
-  <Link to="/login">Login</Link>
-)}
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <Link to="/login">Login</Link>
+          )}
           <Link to="/wishlist">
-  ❤️ Wishlist
-</Link>
+            ❤️ Wishlist
+          </Link>
           <Link to="/cart" className="cart">
-  🛒 Cart ({cartCount})
-</Link>
+            🛒 Cart ({cartCount})
+          </Link>
         </div>
       </nav>
 
@@ -163,92 +195,65 @@ function Home({ cart, setCart,wishlist,
 
         <div className="products">
           {products
-  .filter((product) =>
-    product.name
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  )
-  .map((product) => (
-            <div className="product-card" key={product.id}>
-  <Link to={`/product/${product.id}`}>
-    <div className="product-image">
-      <img src={product.image} alt={product.name} />
-    </div>
-  </Link>
+            .filter((product) =>
+              product.name
+                .toLowerCase()
+                .includes(search.toLowerCase())
+            )
+            .map((product) => (
+              <div className="product-card" key={product.id}>
+                <Link to={`/product/${product.id}`}>
+                  <div className="product-image">
+                    <img src={product.image} alt={product.name} />
+                  </div>
+                </Link>
 
-  <button
-  className="wishlist"
-  onClick={() => {
-    const exists = wishlist.find(
-      (item) => item.id === product.id
-    );
+                <button
+                  className="wishlist"
+                  onClick={() => {
+                    const exists = wishlist.find(
+                      (item) => item.id === product.id
+                    );
 
-    if (exists) {
-      setWishlist(
-        wishlist.filter(
-          (item) => item.id !== product.id
-        )
-      );
-    } else {
-      setWishlist([...wishlist, product]);
-    }
-  }}
->
-  {wishlist.some(
-    (item) => item.id === product.id
-  )
-    ? "♥"
-    : "♡"}
-</button>
-  <button
-  className="add-cart-btn"
-  onClick={() => {
-    const existingProduct = cart.find(
-      (item) => item.id === product.id
-    );
+                    if (exists) {
+                      setWishlist(
+                        wishlist.filter(
+                          (item) => item.id !== product.id
+                        )
+                      );
+                    } else {
+                      setWishlist([...wishlist, product]);
+                    }
+                  }}
+                >
+                  {wishlist.some(
+                    (item) => item.id === product.id
+                  )
+                    ? "♥"
+                    : "♡"}
+                </button>
+                <button
+                  className="add-cart-btn"
+                  onClick={() => addToCart(product)}
+                >
+                  Add to Cart
+                </button>
 
-    if (existingProduct) {
-      setCart(
-        cart.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-              }
-            : item
-        )
-      );
-    } else {
-      setCart([
-        ...cart,
-        {
-          ...product,
-          quantity: 1,
-        },
-      ]);
-    }
+                <div className="product-info">
+                  <p className="category">{product.category}</p>
 
-    alert("Product added to cart! 🛒");
-  }}
->
-  Add to Cart
-</button>
+                  <h3>{product.name}</h3>
 
-              <div className="product-info">
-                <p className="category">{product.category}</p>
+                  <div className="rating">⭐⭐⭐⭐⭐</div>
 
-                <h3>{product.name}</h3>
+                  <div className="product-bottom">
+                    <strong>₹{product.price}</strong>
 
-                <div className="rating">⭐⭐⭐⭐⭐</div>
 
-                <div className="product-bottom">
-                  <strong>₹{product.price}</strong>
-
-                
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </section>
 
@@ -304,11 +309,14 @@ function Home({ cart, setCart,wishlist,
 
 function App() {
   const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
-    useEffect(() => {
+  const [products, setProducts] = useState([]);
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setAuthLoading(false);
     });
 
     const {
@@ -319,38 +327,129 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("id");
+
+      if (error) {
+        console.error("Error fetching products:", error);
+        return;
+      }
+
+      setProducts(data);
+    };
+
+    fetchProducts();
+  }, []);
+  useEffect(() => {
+    const fetchCart = async () => {
+      if (!session || products.length === 0) {
+        setCart([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("cart")
+        .select("product_id, quantity")
+        .eq("user_id", session.user.id);
+
+      if (error) {
+        console.error("Error fetching cart:", error);
+        return;
+      }
+
+      const cartItems = data
+        .map((cartItem) => {
+          const product = products.find(
+            (item) => item.id === cartItem.product_id
+          );
+
+          if (!product) return null;
+
+          return {
+            ...product,
+            quantity: cartItem.quantity,
+          };
+        })
+        .filter(Boolean);
+
+      setCart(cartItems);
+    };
+
+    fetchCart();
+  }, [session, products]);
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      if (!session || products.length === 0) {
+        setWishlist([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("wishlist")
+        .select("product_id")
+        .eq("user_id", session.user.id);
+
+      if (error) {
+        console.error("Error fetching wishlist:", error);
+        return;
+      }
+
+      const wishlistItems = data
+        .map((wishlistItem) => {
+          const product = products.find(
+            (item) => item.id === wishlistItem.product_id
+          );
+
+          if (!product) return null;
+
+          return product;
+        })
+        .filter(Boolean);
+
+      setWishlist(wishlistItems);
+    };
+
+    fetchWishlist();
+  }, [session, products]);
   const cartCount = cart.reduce(
-  (total, item) => total + item.quantity,
-  0
-);
+    (total, item) => total + item.quantity,
+    0
+  );
 
   return (
     <BrowserRouter>
       <Routes>
         <Route
-  path="/"
-  element={
-    <Home
-      cart={cart}
-      setCart={setCart}
-      wishlist={wishlist}
-      setWishlist={setWishlist}
-      cartCount={cartCount}
-      session={session}
-    />
-  }
-/>
+          path="/"
+          element={
+            <Home
+              products={products}
+              cart={cart}
+              setCart={setCart}
+              wishlist={wishlist}
+              setWishlist={setWishlist}
+              cartCount={cartCount}
+              session={session}
+            />
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route
-  path="/order-success"
-  element={<OrderSuccess />}
-/>
+          path="/order-success"
+          element={<OrderSuccess />}
+        />
         <Route
           path="/product/:id"
           element={
             <ProductDetails
+              products={products}
               cart={cart}
               setCart={setCart}
+              session={session}
             />
           }
         />
@@ -358,6 +457,7 @@ function App() {
           path="/products"
           element={
             <Products
+              products={products}
               cart={cart}
               setCart={setCart}
               wishlist={wishlist}
@@ -373,6 +473,7 @@ function App() {
               wishlist={wishlist}
               setWishlist={setWishlist}
               session={session}
+              authLoading={authLoading}
             />
           }
         />
@@ -393,6 +494,7 @@ function App() {
               cart={cart}
               setCart={setCart}
               session={session}
+              authLoading={authLoading}
             />
           }
         />

@@ -1,52 +1,11 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 import "./productDetails.css";
 
-const products = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 1999,
-    category: "Electronics",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
-    description:
-      "Enjoy high-quality sound with comfortable wireless headphones. Perfect for music, movies and gaming.",
-  },
-  {
-    id: 2,
-    name: "Smart Watch",
-    price: 2499,
-    category: "Electronics",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800",
-    description:
-      "A stylish smart watch with fitness tracking, notifications and everyday smart features.",
-  },
-  {
-    id: 3,
-    name: "Running Shoes",
-    price: 1799,
-    category: "Fashion",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800",
-    description:
-      "Lightweight and comfortable running shoes designed for everyday workouts and running.",
-  },
-  {
-    id: 4,
-    name: "Backpack",
-    price: 999,
-    category: "Accessories",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800",
-    description:
-      "Spacious and durable backpack suitable for college, travel and everyday use.",
-  },
-];
-
-function ProductDetails({ cart, setCart }) {
+function ProductDetails({ products, cart, setCart, session }) {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const product = products.find(
     (item) => item.id === Number(id)
@@ -63,34 +22,70 @@ function ProductDetails({ cart, setCart }) {
     );
   }
 
-  const addToCart = () => {
-  const existingProduct = cart.find(
-    (item) => item.id === product.id
-  );
+  const addToCart = async () => {
+    if (!session) {
+      alert("Please login to add products to cart.");
+      navigate("/login");
+      return false;
+    }
 
-  if (existingProduct) {
-    setCart(
-      cart.map((item) =>
-        item.id === product.id
-          ? {
-              ...item,
-              quantity: item.quantity + quantity,
-            }
-          : item
-      )
+    const existingProduct = cart.find(
+      (item) => item.id === product.id
     );
-  } else {
-    setCart([
-      ...cart,
-      {
-        ...product,
-        quantity: quantity,
-      },
-    ]);
-  }
 
-  alert("Product added to cart! 🛒");
-};
+    if (existingProduct) {
+      const newQuantity =
+        existingProduct.quantity + quantity;
+
+      const { error } = await supabase
+        .from("cart")
+        .update({ quantity: newQuantity })
+        .eq("user_id", session.user.id)
+        .eq("product_id", product.id);
+
+      if (error) {
+        console.error("Error updating cart:", error);
+        alert("Could not update cart.");
+        return false;
+      }
+
+      setCart(
+        cart.map((item) =>
+          item.id === product.id
+            ? {
+                ...item,
+                quantity: newQuantity,
+              }
+            : item
+        )
+      );
+    } else {
+      const { error } = await supabase
+        .from("cart")
+        .insert({
+          user_id: session.user.id,
+          product_id: product.id,
+          quantity: quantity,
+        });
+
+      if (error) {
+        console.error("Error adding to cart:", error);
+        alert("Could not add product to cart.");
+        return false;
+      }
+
+      setCart([
+        ...cart,
+        {
+          ...product,
+          quantity: quantity,
+        },
+      ]);
+    }
+
+    alert("Product added to cart! 🛒");
+    return true;
+  };
 
   return (
     <div className="details-page">
@@ -101,17 +96,29 @@ function ProductDetails({ cart, setCart }) {
         </Link>
 
         <div>
-          <Link to="/products">Products</Link>
+          <Link to="/products">
+            Products
+          </Link>
+
           <Link to="/cart">
-  🛒 Cart ({cart.reduce((total, item) => total + item.quantity, 0)})
-</Link>
+            🛒 Cart (
+            {cart.reduce(
+              (total, item) =>
+                total + item.quantity,
+              0
+            )}
+            )
+          </Link>
         </div>
       </nav>
 
       <div className="details-container">
 
         <div className="details-image">
-          <img src={product.image} alt={product.name} />
+          <img
+            src={product.image}
+            alt={product.name}
+          />
         </div>
 
         <div className="details-info">
@@ -129,15 +136,19 @@ function ProductDetails({ cart, setCart }) {
           <h2>₹{product.price}</h2>
 
           <p className="details-description">
-            {product.description}
+            {product.description ||
+              "High-quality product designed for everyday use."}
           </p>
 
           <div className="quantity">
+
             <span>Quantity:</span>
 
             <button
               onClick={() =>
-                setQuantity(Math.max(1, quantity - 1))
+                setQuantity(
+                  Math.max(1, quantity - 1)
+                )
               }
             >
               −
@@ -146,10 +157,13 @@ function ProductDetails({ cart, setCart }) {
             <strong>{quantity}</strong>
 
             <button
-              onClick={() => setQuantity(quantity + 1)}
+              onClick={() =>
+                setQuantity(quantity + 1)
+              }
             >
               +
             </button>
+
           </div>
 
           <button
@@ -160,14 +174,17 @@ function ProductDetails({ cart, setCart }) {
           </button>
 
           <button
-  className="buy-btn"
-  onClick={() => {
-    addToCart();
-    window.location.href = "/checkout";
-  }}
->
-  Buy Now
-</button>
+            className="buy-btn"
+            onClick={async () => {
+              const success = await addToCart();
+
+              if (success) {
+                navigate("/checkout");
+              }
+            }}
+          >
+            Buy Now
+          </button>
 
         </div>
 

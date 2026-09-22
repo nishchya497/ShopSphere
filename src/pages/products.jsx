@@ -1,92 +1,86 @@
 import { useState } from "react";
+import { supabase } from "../supabaseClient";
 import { Link, useSearchParams } from "react-router-dom";
 import "./products.css";
 
-const products = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 1999,
-    category: "Electronics",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600",
-  },
-  {
-    id: 2,
-    name: "Smart Watch",
-    price: 2499,
-    category: "Electronics",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600",
-  },
-  {
-    id: 3,
-    name: "Running Shoes",
-    price: 1799,
-    category: "Fashion",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
-  },
-  {
-    id: 4,
-    name: "Backpack",
-    price: 999,
-    category: "Accessories",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600",
-  },
-  {
-    id: 5,
-    name: "Classic T-Shirt",
-    price: 699,
-    category: "Fashion",
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600",
-  },
-  {
-    id: 6,
-    name: "Sunglasses",
-    price: 899,
-    category: "Accessories",
-    image:
-      "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600",
-  },
-];
 
-function Products({ cart, setCart,wishlist,
-  setWishlist, }) {
+
+function Products({
+  products,
+  cart,
+  setCart,
+  wishlist,
+  setWishlist,
+}) {
   const [search, setSearch] = useState("");
   const [searchParams] = useSearchParams();
 
-const [category, setCategory] = useState(
-  searchParams.get("category") || "All"
-);
-  const [sort, setSort] = useState("default");
-  const addToCart = (product) => {
-  const existingProduct = cart.find(
-    (item) => item.id === product.id
+  const [category, setCategory] = useState(
+    searchParams.get("category") || "All"
   );
+  const [sort, setSort] = useState("default");
+  const addToCart = async (product) => {
+    const session = (
+      await supabase.auth.getSession()
+    ).data.session;
 
-  if (existingProduct) {
-    setCart(
-      cart.map((item) =>
-        item.id === product.id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
+    if (!session) {
+      alert("Please login to add products to cart.");
+      return;
+    }
+
+    const existingProduct = cart.find(
+      (item) => item.id === product.id
     );
-  } else {
-    setCart([
-      ...cart,
-      {
-        ...product,
-        quantity: 1,
-      },
-    ]);
-  }
 
-  alert("Product added to cart! 🛒");
-};
+    if (existingProduct) {
+      const newQuantity = existingProduct.quantity + 1;
+
+      const { error } = await supabase
+        .from("cart")
+        .update({ quantity: newQuantity })
+        .eq("user_id", session.user.id)
+        .eq("product_id", product.id);
+
+      if (error) {
+        console.error("Error updating cart:", error);
+        alert("Could not update cart.");
+        return;
+      }
+
+      setCart(
+        cart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+    } else {
+      const { error } = await supabase
+        .from("cart")
+        .insert({
+          user_id: session.user.id,
+          product_id: product.id,
+          quantity: 1,
+        });
+
+      if (error) {
+        console.error("Error adding to cart:", error);
+        alert("Could not add product to cart.");
+        return;
+      }
+
+      setCart([
+        ...cart,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ]);
+    }
+
+    alert("Product added to cart! 🛒");
+  };
   const filteredProducts = products
     .filter((product) => {
       const matchesSearch = product.name
@@ -121,14 +115,14 @@ const [category, setCategory] = useState(
 
         <div className="nav-links">
           <Link to="/wishlist">
-  ❤️ Wishlist ({wishlist.length})
-</Link>
+            ❤️ Wishlist ({wishlist.length})
+          </Link>
           <Link to="/">Home</Link>
           <Link to="/products">Products</Link>
           <Link to="/login">Login</Link>
           <Link to="/cart">
-  🛒 Cart ({cart.reduce((total, item) => total + item.quantity, 0)})
-</Link>
+            🛒 Cart ({cart.reduce((total, item) => total + item.quantity, 0)})
+          </Link>
         </div>
       </nav>
 
@@ -222,29 +216,72 @@ const [category, setCategory] = useState(
                 />
 
                 <button
-  className="wishlist"
-  onClick={() => {
-    const exists = wishlist.find(
-      (item) => item.id === product.id
-    );
+                  className="wishlist"
+                  onClick={async () => {
+                    const session = (
+                      await supabase.auth.getSession()
+                    ).data.session;
 
-    if (exists) {
-      setWishlist(
-        wishlist.filter(
-          (item) => item.id !== product.id
-        )
-      );
-    } else {
-      setWishlist([...wishlist, product]);
-    }
-  }}
->
-  {wishlist.some(
-    (item) => item.id === product.id
-  )
-    ? "♥"
-    : "♡"}
-</button>
+                    if (!session) {
+                      alert("Please login to add products to wishlist.");
+                      return;
+                    }
+
+                    const exists = wishlist.find(
+                      (item) => item.id === product.id
+                    );
+
+                    if (exists) {
+                      const { error } = await supabase
+                        .from("wishlist")
+                        .delete()
+                        .eq("user_id", session.user.id)
+                        .eq("product_id", product.id);
+
+                      if (error) {
+                        console.error(
+                          "Error removing from wishlist:",
+                          error
+                        );
+                        alert("Could not remove product.");
+                        return;
+                      }
+
+                      setWishlist(
+                        wishlist.filter(
+                          (item) => item.id !== product.id
+                        )
+                      );
+                    } else {
+                      const { error } = await supabase
+                        .from("wishlist")
+                        .insert({
+                          user_id: session.user.id,
+                          product_id: product.id,
+                        });
+
+                      if (error) {
+                        console.error(
+                          "Error adding to wishlist:",
+                          error
+                        );
+                        alert("Could not add product to wishlist.");
+                        return;
+                      }
+
+                      setWishlist([
+                        ...wishlist,
+                        product,
+                      ]);
+                    }
+                  }}
+                >
+                  {wishlist.some(
+                    (item) => item.id === product.id
+                  )
+                    ? "♥"
+                    : "♡"}
+                </button>
 
               </div>
 
