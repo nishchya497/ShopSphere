@@ -22,6 +22,9 @@ function ProductDetails({ products, cart, setCart, session }) {
     );
   }
 
+  // Stock value
+  const stock = Number(product.stock || 0);
+
   const addToCart = async () => {
     if (!session) {
       alert("Please login to add products to cart.");
@@ -29,22 +32,47 @@ function ProductDetails({ products, cart, setCart, session }) {
       return false;
     }
 
+    // Product completely out of stock
+    if (stock <= 0) {
+      alert("This product is currently out of stock.");
+      return false;
+    }
+
     const existingProduct = cart.find(
       (item) => item.id === product.id
     );
 
-    if (existingProduct) {
-      const newQuantity =
-        existingProduct.quantity + quantity;
+    // Calculate total quantity after adding
+    const currentQuantity = existingProduct
+      ? existingProduct.quantity
+      : 0;
 
+    const newQuantity = currentQuantity + quantity;
+
+    // Prevent buying more than available stock
+    if (newQuantity > stock) {
+      alert(
+        `Only ${stock} item${
+          stock === 1 ? "" : "s"
+        } available in stock.`
+      );
+      return false;
+    }
+
+    if (existingProduct) {
       const { error } = await supabase
         .from("cart")
-        .update({ quantity: newQuantity })
+        .update({
+          quantity: newQuantity,
+        })
         .eq("user_id", session.user.id)
         .eq("product_id", product.id);
 
       if (error) {
-        console.error("Error updating cart:", error);
+        console.error(
+          "Error updating cart:",
+          error
+        );
         alert("Could not update cart.");
         return false;
       }
@@ -69,7 +97,10 @@ function ProductDetails({ products, cart, setCart, session }) {
         });
 
       if (error) {
-        console.error("Error adding to cart:", error);
+        console.error(
+          "Error adding to cart:",
+          error
+        );
         alert("Could not add product to cart.");
         return false;
       }
@@ -140,11 +171,27 @@ function ProductDetails({ products, cart, setCart, session }) {
               "High-quality product designed for everyday use."}
           </p>
 
+          {/* STOCK STATUS */}
+          <p>
+            <strong>Stock: </strong>
+
+            {stock === 0 ? (
+              <span>Out of Stock</span>
+            ) : stock <= 5 ? (
+              <span>
+                Only {stock} left in stock
+              </span>
+            ) : (
+              <span>In Stock</span>
+            )}
+          </p>
+
           <div className="quantity">
 
             <span>Quantity:</span>
 
             <button
+              disabled={stock === 0}
               onClick={() =>
                 setQuantity(
                   Math.max(1, quantity - 1)
@@ -157,8 +204,17 @@ function ProductDetails({ products, cart, setCart, session }) {
             <strong>{quantity}</strong>
 
             <button
+              disabled={
+                stock === 0 ||
+                quantity >= stock
+              }
               onClick={() =>
-                setQuantity(quantity + 1)
+                setQuantity(
+                  Math.min(
+                    stock,
+                    quantity + 1
+                  )
+                )
               }
             >
               +
@@ -169,21 +225,28 @@ function ProductDetails({ products, cart, setCart, session }) {
           <button
             className="details-cart-btn"
             onClick={addToCart}
+            disabled={stock === 0}
           >
-            🛒 Add to Cart
+            {stock === 0
+              ? "Out of Stock"
+              : "🛒 Add to Cart"}
           </button>
 
           <button
             className="buy-btn"
+            disabled={stock === 0}
             onClick={async () => {
-              const success = await addToCart();
+              const success =
+                await addToCart();
 
               if (success) {
                 navigate("/checkout");
               }
             }}
           >
-            Buy Now
+            {stock === 0
+              ? "Out of Stock"
+              : "Buy Now"}
           </button>
 
         </div>

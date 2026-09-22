@@ -10,7 +10,9 @@ function Checkout({ cart, setCart, session }) {
   useEffect(() => {
     const script = document.createElement("script");
 
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.src =
+      "https://checkout.razorpay.com/v1/checkout.js";
+
     script.async = true;
 
     document.body.appendChild(script);
@@ -50,6 +52,37 @@ function Checkout({ cart, setCart, session }) {
     });
   };
 
+  // -----------------------------------------------------
+  // CHECK STOCK BEFORE ORDER
+  // -----------------------------------------------------
+
+  const checkStock = async () => {
+    for (const item of cart) {
+      const { data: product, error } = await supabase
+        .from("products")
+        .select("id, name, stock")
+        .eq("id", item.id)
+        .single();
+
+      if (error || !product) {
+        alert(`Could not check stock for ${item.name}.`);
+        return false;
+      }
+
+      if (product.stock < item.quantity) {
+        alert(
+          `${product.name} has only ${product.stock} item${
+            product.stock === 1 ? "" : "s"
+          } left in stock.`
+        );
+
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const placeOrder = async (e) => {
     e.preventDefault();
 
@@ -61,6 +94,13 @@ function Checkout({ cart, setCart, session }) {
     if (!session) {
       alert("Please login first.");
       navigate("/login");
+      return;
+    }
+
+    // Check stock before starting payment/order
+    const stockAvailable = await checkStock();
+
+    if (!stockAvailable) {
       return;
     }
 
@@ -80,19 +120,24 @@ function Checkout({ cart, setCart, session }) {
     // =====================================================
 
     if (paymentMethod === "cod") {
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: session.user.id,
-          total_amount: total,
-          payment_method: "cod",
-          status: "Pending",
-        })
-        .select()
-        .single();
+      const { data: order, error: orderError } =
+        await supabase
+          .from("orders")
+          .insert({
+            user_id: session.user.id,
+            total_amount: total,
+            payment_method: "cod",
+            status: "Pending",
+          })
+          .select()
+          .single();
 
       if (orderError) {
-        console.error("Error creating order:", orderError);
+        console.error(
+          "Error creating order:",
+          orderError
+        );
+
         alert("Could not place order.");
         return;
       }
@@ -109,7 +154,10 @@ function Checkout({ cart, setCart, session }) {
         .insert(orderItems);
 
       if (itemsError) {
-        console.error("Error creating order items:", itemsError);
+        console.error(
+          "Error creating order items:",
+          itemsError
+        );
 
         await supabase
           .from("orders")
@@ -120,6 +168,34 @@ function Checkout({ cart, setCart, session }) {
         return;
       }
 
+      // Reduce stock
+      const { error: stockError } = await supabase.rpc(
+        "decrement_order_stock",
+        {
+          p_order_id: order.id,
+        }
+      );
+
+      if (stockError) {
+        console.error(
+          "Error reducing stock:",
+          stockError
+        );
+
+        // Remove failed order
+        await supabase
+          .from("orders")
+          .delete()
+          .eq("id", order.id);
+
+        alert(
+          stockError.message ||
+            "Could not update product stock."
+        );
+
+        return;
+      }
+
       // Clear Supabase cart
       const { error: cartError } = await supabase
         .from("cart")
@@ -127,7 +203,10 @@ function Checkout({ cart, setCart, session }) {
         .eq("user_id", session.user.id);
 
       if (cartError) {
-        console.error("Error clearing cart:", cartError);
+        console.error(
+          "Error clearing cart:",
+          cartError
+        );
       }
 
       // Clear React cart
@@ -219,10 +298,12 @@ function Checkout({ cart, setCart, session }) {
                 method: "POST",
 
                 headers: {
-  "Content-Type": "application/json",
-  apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${session.access_token}`,
-},
+                  "Content-Type": "application/json",
+                  apikey:
+                    import.meta.env
+                      .VITE_SUPABASE_ANON_KEY,
+                  Authorization: `Bearer ${session.access_token}`,
+                },
 
                 body: JSON.stringify({
                   razorpay_order_id:
@@ -241,18 +322,26 @@ function Checkout({ cart, setCart, session }) {
               await verificationResponse.json();
 
             console.log(
-  "Payment verification response:",
-  JSON.stringify(verification, null, 2)
-);
+              "Payment verification response:",
+              JSON.stringify(
+                verification,
+                null,
+                2
+              )
+            );
 
             if (
               !verificationResponse.ok ||
               !verification.verified
             ) {
               console.error(
-  "Payment verification failed:",
-  JSON.stringify(verification, null, 2)
-);
+                "Payment verification failed:",
+                JSON.stringify(
+                  verification,
+                  null,
+                  2
+                )
+              );
 
               alert(
                 "Payment verification failed."
@@ -260,10 +349,6 @@ function Checkout({ cart, setCart, session }) {
 
               return;
             }
-
-            // ------------------------------------------------
-            // PAYMENT VERIFIED
-            // ------------------------------------------------
 
             console.log(
               "Payment verified successfully:",
@@ -285,11 +370,8 @@ function Checkout({ cart, setCart, session }) {
               .from("orders")
               .insert({
                 user_id: session.user.id,
-
                 total_amount: total,
-
                 payment_method: "razorpay",
-
                 status: "Paid",
               })
               .select()
@@ -314,11 +396,8 @@ function Checkout({ cart, setCart, session }) {
 
             const orderItems = cart.map((item) => ({
               order_id: order.id,
-
               product_id: item.id,
-
               quantity: item.quantity,
-
               price: item.price,
             }));
 
@@ -342,7 +421,32 @@ function Checkout({ cart, setCart, session }) {
             }
 
             // ------------------------------------------------
-            // STEP 6: Save payment information
+            // STEP 6: Reduce stock
+            // ------------------------------------------------
+
+            const { error: stockError } =
+              await supabase.rpc(
+                "decrement_order_stock",
+                {
+                  p_order_id: order.id,
+                }
+              );
+
+            if (stockError) {
+              console.error(
+                "Error reducing stock:",
+                stockError
+              );
+
+              alert(
+                "Payment succeeded, but stock could not be updated. Please contact support."
+              );
+
+              return;
+            }
+
+            // ------------------------------------------------
+            // STEP 7: Save payment information
             // ------------------------------------------------
 
             const {
@@ -370,13 +474,10 @@ function Checkout({ cart, setCart, session }) {
                 "Error saving payment:",
                 paymentSaveError
               );
-
-              // Don't cancel the order here.
-              // Payment has already been verified.
             }
 
             // ------------------------------------------------
-            // STEP 7: Clear cart
+            // STEP 8: Clear cart
             // ------------------------------------------------
 
             const {
@@ -393,11 +494,10 @@ function Checkout({ cart, setCart, session }) {
               );
             }
 
-            // Clear React cart
             setCart([]);
 
             // ------------------------------------------------
-            // STEP 8: Go to success page
+            // STEP 9: Success page
             // ------------------------------------------------
 
             navigate(
@@ -417,7 +517,6 @@ function Checkout({ cart, setCart, session }) {
 
         prefill: {
           name: form.name,
-
           contact: form.phone,
         },
 
@@ -427,7 +526,7 @@ function Checkout({ cart, setCart, session }) {
       };
 
       // -----------------------------------------------------
-      // STEP 9: Check Razorpay is loaded
+      // STEP 10: Check Razorpay
       // -----------------------------------------------------
 
       if (!window.Razorpay) {
@@ -439,10 +538,11 @@ function Checkout({ cart, setCart, session }) {
       }
 
       // -----------------------------------------------------
-      // STEP 10: Open Razorpay
+      // STEP 11: Open Razorpay
       // -----------------------------------------------------
 
-      const razorpay = new window.Razorpay(options);
+      const razorpay =
+        new window.Razorpay(options);
 
       razorpay.on(
         "payment.failed",
@@ -570,7 +670,6 @@ function Checkout({ cart, setCart, session }) {
               </h2>
 
               <label>
-
                 <input
                   type="radio"
                   name="payment"
@@ -579,11 +678,9 @@ function Checkout({ cart, setCart, session }) {
                 />
 
                 Cash on Delivery
-
               </label>
 
               <label>
-
                 <input
                   type="radio"
                   name="payment"
@@ -591,11 +688,9 @@ function Checkout({ cart, setCart, session }) {
                 />
 
                 Online Payment
-
               </label>
 
               <label>
-
                 <input
                   type="radio"
                   name="payment"
@@ -603,7 +698,6 @@ function Checkout({ cart, setCart, session }) {
                 />
 
                 Credit/Debit Card
-
               </label>
 
             </div>

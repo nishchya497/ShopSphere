@@ -13,6 +13,18 @@ import Products from "./pages/products";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminInventory from "./pages/admin/AdminInventory";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
+
+
 
 function Home({
   products,
@@ -504,6 +516,14 @@ function App() {
           }
         />
         <Route
+  path="/admin"
+  element={<AdminDashboard />}
+/>
+<Route
+  path="/admin/orders"
+  element={<AdminOrders />}
+/>
+        <Route
           path="/orders"
           element={
             <Orders
@@ -513,6 +533,34 @@ function App() {
           }
         />
         <Route
+  path="/admin/orders/:orderId"
+  element={<AdminOrderDetails />}
+/>
+        <Route
+  path="/admin/categories"
+  element={<AdminCategories />}
+/>
+<Route path="/admin/settings" element={<AdminSettings />} />
+
+        <Route
+  path="/admin/coupons"
+  element={<AdminCoupons />}
+/>
+        <Route
+  path="/admin/products"
+  element={<AdminProducts />}
+/>
+
+<Route
+  path="/admin/inventory"
+  element={<AdminInventory />}
+/>
+
+<Route
+  path="/admin/customers"
+  element={<AdminCustomers />}
+/>
+        <Route
           path="/orders/:orderId"
           element={
             <OrderDetails
@@ -521,6 +569,10 @@ function App() {
             />
           }
         />
+        <Route
+  path="/admin/payments"
+  element={<AdminPayments />}
+/>
         <Route
           path="/cart"
           element={
