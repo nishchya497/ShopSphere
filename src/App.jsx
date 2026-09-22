@@ -10,8 +10,9 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Products from "./pages/products";
-
-
+import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
 
 function Home({
   products,
@@ -102,6 +103,11 @@ function Home({
         <div className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/products">Products</Link>
+          {session && (
+            <Link to="/profile">
+              👤 Profile
+            </Link>
+          )}
           {session ? (
             <button
               onClick={async () => {
@@ -116,6 +122,7 @@ function Home({
           <Link to="/wishlist">
             ❤️ Wishlist
           </Link>
+          <Link to="/orders">📦 Orders</Link>
           <Link to="/cart" className="cart">
             🛒 Cart ({cartCount})
           </Link>
@@ -439,8 +446,17 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route
-          path="/order-success"
+          path="/order-success/:orderId"
           element={<OrderSuccess />}
+        />
+        <Route
+          path="/profile"
+          element={
+            <Profile
+              session={session}
+              authLoading={authLoading}
+            />
+          }
         />
         <Route
           path="/product/:id"
@@ -484,6 +500,24 @@ function App() {
               cart={cart}
               setCart={setCart}
               session={session}
+            />
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <Orders
+              session={session}
+              authLoading={authLoading}
+            />
+          }
+        />
+        <Route
+          path="/orders/:orderId"
+          element={
+            <OrderDetails
+              session={session}
+              authLoading={authLoading}
             />
           }
         />

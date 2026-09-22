@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./checkout.css";
+import { supabase } from "../supabaseClient";
 
 function Checkout({ cart, setCart, session }) {
   const navigate = useNavigate();
@@ -31,20 +32,91 @@ function Checkout({ cart, setCart, session }) {
     });
   };
 
-  const placeOrder = (e) => {
-    e.preventDefault();
+  const placeOrder = async (e) => {
+  e.preventDefault();
 
-    if (cart.length === 0) {
-      alert("Your cart is empty!");
-      return;
-    }
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
 
-    alert("Order placed successfully! 🎉");
+  if (!session) {
+    alert("Please login first.");
+    navigate("/login");
+    return;
+  }
 
-    setCart([]);
+  const paymentMethod = document.querySelector(
+    'input[name="payment"]:checked'
+  ).value;
 
-    navigate("/order-success");
-  };
+  // 1. Create order
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .insert({
+      user_id: session.user.id,
+      total_amount: total,
+      payment_method: paymentMethod,
+      status: "Pending",
+    })
+    .select()
+    .single();
+
+  if (orderError) {
+    console.error("Error creating order:", orderError);
+    alert("Could not place order.");
+    return;
+  }
+
+  // 2. Create order items
+  const orderItems = cart.map((item) => ({
+    order_id: order.id,
+    product_id: item.id,
+    quantity: item.quantity,
+    price: item.price,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("order_items")
+    .insert(orderItems);
+
+  if (itemsError) {
+    console.error(
+      "Error creating order items:",
+      itemsError
+    );
+
+    // Remove the order if items could not be created
+    await supabase
+      .from("orders")
+      .delete()
+      .eq("id", order.id);
+
+    alert("Could not save order items.");
+    return;
+  }
+
+  // 3. Clear cart from Supabase
+  const { error: cartError } = await supabase
+    .from("cart")
+    .delete()
+    .eq("user_id", session.user.id);
+
+  if (cartError) {
+    console.error(
+      "Error clearing cart:",
+      cartError
+    );
+  }
+
+  // 4. Clear React cart
+  setCart([]);
+
+  alert("Order placed successfully! 🎉");
+
+  // 5. Go to success page
+  navigate(`/order-success/${order.id}`);
+};
 
   return (
     <div className="checkout-page">
