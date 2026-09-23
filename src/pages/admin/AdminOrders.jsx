@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
     fetchOrders();
@@ -52,7 +54,17 @@ function AdminOrders() {
 
     alert("Order status updated successfully!");
   };
+  const filteredOrders = orders.filter((order) => {
+  const matchesSearch =
+    String(order.id).includes(search) ||
+    order.user_id.toLowerCase().includes(search.toLowerCase());
 
+  const matchesStatus =
+    statusFilter === "All" ||
+    order.status === statusFilter;
+
+  return matchesSearch && matchesStatus;
+});
   return (
     <div>
       <AdminSidebar />
@@ -60,6 +72,30 @@ function AdminOrders() {
       <div className="admin-page">
         <h1>Manage Orders</h1>
 
+        <div className="order-filters">
+  <input
+    type="text"
+    placeholder="Search by Order ID or User ID..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+  >
+    <option value="All">All Status</option>
+    <option value="Pending">Pending</option>
+    <option value="Processing">Processing</option>
+    <option value="Shipped">Shipped</option>
+    <option value="Delivered">Delivered</option>
+    <option value="Cancelled">Cancelled</option>
+  </select>
+</div>
+<p className="order-count">
+  Showing {filteredOrders.length} order
+  {filteredOrders.length !== 1 ? "s" : ""}
+</p>
         {loading ? (
           <p>Loading orders...</p>
         ) : orders.length === 0 ? (
@@ -75,11 +111,12 @@ function AdminOrders() {
                 <th>Payment Method</th>
                 <th>Status</th>
                 <th>Date</th>
+                <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <tr key={order.id}>
                   <td>
   <Link
@@ -100,7 +137,8 @@ function AdminOrders() {
 
                   <td>
                     <select
-                      value={order.status}
+  className={`order-status-select ${order.status.toLowerCase()}`}
+  value={order.status}
                       onChange={(e) =>
                         updateStatus(
                           order.id,
@@ -131,10 +169,13 @@ function AdminOrders() {
                   </td>
 
                   <td>
-                    {new Date(
-                      order.created_at
-                    ).toLocaleDateString()}
-                  </td>
+  <Link
+    to={`/admin/orders/${order.id}`}
+    className="view-order-btn"
+  >
+    View
+  </Link>
+</td>
                 </tr>
               ))}
             </tbody>

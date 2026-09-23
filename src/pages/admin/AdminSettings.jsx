@@ -1,12 +1,15 @@
 import AdminSidebar from "./AdminSidebar";
+import "./AdminSettings.css";
 
 function AdminSettings() {
   return (
     <div>
       <AdminSidebar />
 
-      <div>
-        <h1>Admin Settings</h1>
+      <div className="admin-page">
+  <h1>Admin Settings</h1>
+
+  <div className="settings-card">
 
         <h2>Store Settings</h2>
 
@@ -31,7 +34,10 @@ function AdminSettings() {
         <br />
         <br />
 
-        <button>Save Settings</button>
+        <button className="settings-button">
+  Save Settings
+</button>
+      </div>
       </div>
     </div>
   );

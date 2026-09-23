@@ -64,7 +64,7 @@ function AdminOrderDetails() {
     <div>
       <AdminSidebar />
 
-      <div>
+      <div className="admin-page">
         <h1>Order Details</h1>
 
         <Link to="/admin/orders">
@@ -73,12 +73,24 @@ function AdminOrderDetails() {
 
         <hr />
 
-        <h2>Order #{order.id}</h2>
+        <div className="order-details-header">
+  <div>
+    <h2>Order #{order.id}</h2>
+    <p>
+      Placed on{" "}
+      {new Date(order.created_at).toLocaleString()}
+    </p>
+  </div>
+
+  <span className={`order-status ${order.status.toLowerCase()}`}>
+    {order.status}
+  </span>
+</div>
 
         <p>
-          <strong>Order Date:</strong>{" "}
-          {new Date(order.created_at).toLocaleString()}
-        </p>
+  <strong>Order Date:</strong>{" "}
+  {new Date(order.created_at).toLocaleString()}
+</p>
 
         <p>
           <strong>User ID:</strong> {order.user_id}
@@ -90,12 +102,43 @@ function AdminOrderDetails() {
         </p>
 
         <p>
-          <strong>Status:</strong> {order.status}
-        </p>
+  <strong>Status:</strong> {order.status}
+</p>
 
-        <hr />
+<hr />
 
-        <h2>Products</h2>
+<h2>Customer & Delivery Information</h2>
+
+<div className="customer-delivery-info">
+  <p>
+    <strong>Name:</strong>{" "}
+    {order.customer_name || "Not provided"}
+  </p>
+
+  <p>
+    <strong>Phone:</strong>{" "}
+    {order.phone || "Not provided"}
+  </p>
+
+  <p>
+    <strong>Address:</strong>{" "}
+    {order.address || "Not provided"}
+  </p>
+
+  <p>
+    <strong>City:</strong>{" "}
+    {order.city || "Not provided"}
+  </p>
+
+  <p>
+    <strong>PIN Code:</strong>{" "}
+    {order.pincode || "Not provided"}
+  </p>
+</div>
+
+<hr />
+
+<h2>Products</h2>
 
         {items.length === 0 ? (
           <p>No products found.</p>

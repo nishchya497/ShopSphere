@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import AdminSidebar from "./AdminSidebar";
+import "./AdminProducts.css";
 
 function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+const [categoryFilter, setCategoryFilter] = useState("All");
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -179,191 +182,254 @@ function AdminProducts() {
     setStock(product.stock);
   };
 
+  const filteredProducts = products.filter((product) => {
+    const totalProducts = products.length;
+
+const inStockProducts = products.filter(
+  (product) => product.stock > 5
+).length;
+
+const lowStockProducts = products.filter(
+  (product) => product.stock > 0 && product.stock <= 5
+).length;
+
+const outOfStockProducts = products.filter(
+  (product) => product.stock === 0
+).length;
+  const matchesSearch =
+    product.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+  const matchesCategory =
+    categoryFilter === "All" ||
+    product.category === categoryFilter;
+
+  return matchesSearch && matchesCategory;
+});
   return (
     <div>
       <AdminSidebar />
 
-      <div>
+      <div className="admin-page">
         <h1>Manage Products</h1>
+        <div className="product-summary">
+  <div className="summary-card">
+    <span>Total Products</span>
+    <strong>{totalProducts}</strong>
+  </div>
 
-        <h2>
-          {editingProduct
-            ? "Edit Product"
-            : "Add New Product"}
-        </h2>
+  <div className="summary-card">
+    <span>In Stock</span>
+    <strong>{inStockProducts}</strong>
+  </div>
 
-        <form
-          onSubmit={
-            editingProduct
-              ? editProduct
-              : addProduct
-          }
-        >
-          <div>
-            <input
-              type="text"
-              placeholder="Product name"
-              value={name}
-              onChange={(e) =>
-                setName(e.target.value)
-              }
-            />
-          </div>
+  <div className="summary-card">
+    <span>Low Stock</span>
+    <strong>{lowStockProducts}</strong>
+  </div>
 
-          <br />
+  <div className="summary-card">
+    <span>Out of Stock</span>
+    <strong>{outOfStockProducts}</strong>
+  </div>
+</div>
 
-          <div>
-            <input
-              type="number"
-              min="0"
-              placeholder="Price"
-              value={price}
-              onChange={(e) =>
-                setPrice(e.target.value)
-              }
-            />
-          </div>
+        <div className="admin-form">
+          <h2>
+  {editingProduct
+    ? `Edit Product: ${editingProduct.name}`
+    : "Add New Product"}
+</h2>
 
-          <br />
+          <form
+            onSubmit={editingProduct ? editProduct : addProduct}
+          >
+            <div>
+              <input
+                type="text"
+                placeholder="Product name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
 
-          <div>
-            <input
-              type="text"
-              placeholder="Category"
-              value={category}
-              onChange={(e) =>
-                setCategory(e.target.value)
-              }
-            />
-          </div>
+            <br />
 
-          <br />
+            <div>
+              <input
+                type="number"
+                min="0"
+                placeholder="Price"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
+            </div>
 
-          <div>
-            <input
-              type="text"
-              placeholder="Image URL"
-              value={image}
-              onChange={(e) =>
-                setImage(e.target.value)
-              }
-            />
-          </div>
+            <br />
 
-          <br />
+            <div>
+              <input
+                type="text"
+                placeholder="Category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              />
+            </div>
 
-          <div>
-            <input
-              type="number"
-              min="0"
-              placeholder="Initial Stock"
-              value={stock}
-              onChange={(e) =>
-                setStock(e.target.value)
-              }
-            />
-          </div>
+            <br />
 
-          <br />
+            <div>
+              <input
+                type="text"
+                placeholder="Image URL"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+              />
+            </div>
 
-          <button type="submit">
-            {editingProduct
-              ? "Update Product"
-              : "Add Product"}
-          </button>
+            <br />
 
-          {editingProduct && (
-            <button
-              type="button"
-              onClick={clearForm}
-              style={{ marginLeft: "10px" }}
-            >
-              Cancel
+            <div>
+              <input
+                type="number"
+                min="0"
+                placeholder="Initial Stock"
+                value={stock}
+                onChange={(e) => setStock(e.target.value)}
+              />
+            </div>
+
+            <br />
+
+            <button type="submit">
+              {editingProduct
+                ? "Update Product"
+                : "Add Product"}
             </button>
-          )}
-        </form>
 
-        <hr />
+            {editingProduct && (
+              <button
+  type="button"
+  className="cancel-btn"
+  onClick={clearForm}
+>
+  Cancel
+</button>
+            )}
+          </form>
+        </div>
 
-        <h2>All Products</h2>
+        <div className="products-table-container">
+          <h2>All Products</h2>
+          <div className="product-filters">
+  <input
+    type="text"
+    placeholder="Search products..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
 
-        {loading ? (
-          <p>Loading products...</p>
-        ) : products.length === 0 ? (
-          <p>No products found.</p>
-        ) : (
-          <table border="1" cellPadding="10">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Category</th>
-                <th>Stock</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
+  <select
+    value={categoryFilter}
+    onChange={(e) => setCategoryFilter(e.target.value)}
+  >
+    <option value="All">All Categories</option>
 
-            <tbody>
-              {products.map((product) => (
-                <tr key={product.id}>
-                  <td>{product.id}</td>
+    {[...new Set(products.map((product) => product.category))]
+      .filter(Boolean)
+      .map((category) => (
+        <option key={category} value={category}>
+          {category}
+        </option>
+      ))}
+  </select>
+</div>
+<p className="product-count">
+  Showing {filteredProducts.length} product
+  {filteredProducts.length !== 1 ? "s" : ""}
+</p>
 
-                  <td>
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      width="80"
-                    />
-                  </td>
-
-                  <td>{product.name}</td>
-
-                  <td>
-                    ₹{product.price}
-                  </td>
-
-                  <td>
-                    {product.category}
-                  </td>
-
-                  <td>{product.stock}</td>
-
-                  <td>
-                    {product.stock === 0
-                      ? "Out of Stock"
-                      : product.stock <= 5
-                      ? "Low Stock"
-                      : "In Stock"}
-                  </td>
-
-                  <td>
-                    <button
-                      onClick={() =>
-                        startEditing(product)
-                      }
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        deleteProduct(product.id)
-                      }
-                      style={{
-                        marginLeft: "10px",
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
+          {loading ? (
+            <p>Loading products...</p>
+          ) : products.length === 0 ? (
+            <p>No products found.</p>
+          ) : (
+            <table className="products-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Image</th>
+                  <th>Name</th>
+                  <th>Price</th>
+                  <th>Category</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+
+              <tbody>
+                {filteredProducts.map((product) => (
+                  <tr key={product.id}>
+                    <td>{product.id}</td>
+
+                    <td>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                      />
+                    </td>
+
+                    <td>{product.name}</td>
+
+                    <td>₹{product.price}</td>
+
+                    <td>{product.category}</td>
+
+                    <td>{product.stock}</td>
+
+                    <td>
+  {product.stock === 0 ? (
+    <span className="product-status out-of-stock">
+      Out of Stock
+    </span>
+  ) : product.stock <= 5 ? (
+    <span className="product-status low-stock">
+      Low Stock
+    </span>
+  ) : (
+    <span className="product-status in-stock">
+      In Stock
+    </span>
+  )}
+</td>
+
+                    <td>
+                      <button
+                        className="edit-btn"
+                        onClick={() =>
+                          startEditing(product)
+                        }
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="delete-btn"
+                        onClick={() =>
+                          deleteProduct(product.id)
+                        }
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

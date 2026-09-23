@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import AdminSidebar from "./AdminSidebar";
+import "./AdminCategories.css";
 
 function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -37,7 +38,7 @@ function AdminCategories() {
     <div>
       <AdminSidebar />
 
-      <div>
+      <div className="categories-table-container">
         <h1>Manage Categories</h1>
 
         {loading ? (
@@ -45,7 +46,7 @@ function AdminCategories() {
         ) : categories.length === 0 ? (
           <p>No categories found.</p>
         ) : (
-          <table border="1" cellPadding="10">
+          <table className="categories-table">
             <thead>
               <tr>
                 <th>#</th>

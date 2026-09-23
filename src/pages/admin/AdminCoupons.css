@@ -1,0 +1,99 @@
+.admin-page {
+  margin-left: 240px;
+  padding: 30px;
+  min-height: 100vh;
+  background: #f3f4f6;
+  box-sizing: border-box;
+}
+
+.admin-page h1 {
+  margin-top: 0;
+  color: #111827;
+}
+
+.admin-form {
+  margin-top: 25px;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.admin-form h2 {
+  margin-top: 0;
+}
+
+.admin-form input,
+.admin-form select {
+  width: 100%;
+  max-width: 500px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.admin-form button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.admin-form button:hover {
+  background: #1d4ed8;
+}
+
+.coupons-table-container {
+  margin-top: 25px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.coupons-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.coupons-table th,
+.coupons-table td {
+  padding: 14px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.coupons-table th {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.coupons-table tr:hover {
+  background: #f9fafb;
+}
+
+.coupon-code {
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.coupon-active {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+@media (max-width: 700px) {
+  .admin-page {
+    margin-left: 0;
+    padding: 20px;
+  }
+}

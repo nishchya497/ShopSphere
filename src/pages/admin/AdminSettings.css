@@ -1,0 +1,65 @@
+.admin-page {
+  margin-left: 240px;
+  padding: 30px;
+  min-height: 100vh;
+  background: #f3f4f6;
+  box-sizing: border-box;
+}
+
+.admin-page h1 {
+  margin-top: 0;
+  color: #111827;
+}
+
+.settings-card {
+  margin-top: 25px;
+  max-width: 700px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.settings-group {
+  margin-bottom: 22px;
+}
+
+.settings-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.settings-group input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+  background: #f9fafb;
+}
+
+.settings-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.settings-button:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 700px) {
+  .admin-page {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .settings-card {
+    padding: 20px;
+  }
+}

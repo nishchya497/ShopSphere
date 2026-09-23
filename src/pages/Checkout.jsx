@@ -46,11 +46,21 @@ function Checkout({ cart, setCart, session }) {
   );
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
+  let value = e.target.value;
+
+  if (e.target.name === "phone") {
+    value = value.replace(/\D/g, "").slice(0, 10);
+  }
+
+  if (e.target.name === "pincode") {
+    value = value.replace(/\D/g, "").slice(0, 6);
+  }
+
+  setForm({
+    ...form,
+    [e.target.name]: value,
+  });
+};
 
   // -----------------------------------------------------
   // CHECK STOCK BEFORE ORDER
@@ -124,11 +134,16 @@ function Checkout({ cart, setCart, session }) {
         await supabase
           .from("orders")
           .insert({
-            user_id: session.user.id,
-            total_amount: total,
-            payment_method: "cod",
-            status: "Pending",
-          })
+  user_id: session.user.id,
+  total_amount: total,
+  payment_method: "cod",
+  status: "Pending",
+  customer_name: form.name,
+  phone: form.phone,
+  address: form.address,
+  city: form.city,
+  pincode: form.pincode,
+})
           .select()
           .single();
 
@@ -369,11 +384,16 @@ function Checkout({ cart, setCart, session }) {
             } = await supabase
               .from("orders")
               .insert({
-                user_id: session.user.id,
-                total_amount: total,
-                payment_method: "razorpay",
-                status: "Paid",
-              })
+  user_id: session.user.id,
+  total_amount: total,
+  payment_method: "razorpay",
+  status: "Paid",
+  customer_name: form.name,
+  phone: form.phone,
+  address: form.address,
+  city: form.city,
+  pincode: form.pincode,
+})
               .select()
               .single();
 
@@ -591,8 +611,13 @@ function Checkout({ cart, setCart, session }) {
           </Link>
 
           <Link to="/cart">
-            🛒 Cart ({cart.length})
-          </Link>
+  🛒 Cart (
+  {cart.reduce(
+    (total, item) => total + item.quantity,
+    0
+  )}
+  )
+</Link>
 
         </div>
 
@@ -603,6 +628,9 @@ function Checkout({ cart, setCart, session }) {
         <h1>
           Checkout
         </h1>
+        <Link to="/cart" className="back-to-cart">
+  ← Back to Cart
+</Link>
 
         <div className="checkout-content">
 
@@ -627,13 +655,16 @@ function Checkout({ cart, setCart, session }) {
             />
 
             <input
-              type="tel"
-              name="phone"
-              placeholder="Phone Number"
-              value={form.phone}
-              onChange={handleChange}
-              required
-            />
+  type="tel"
+  name="phone"
+  placeholder="Phone Number"
+  value={form.phone}
+  onChange={handleChange}
+  maxLength="10"
+  pattern="[0-9]{10}"
+  title="Please enter a valid 10-digit phone number"
+  required
+/>
 
             <textarea
               name="address"
@@ -653,13 +684,16 @@ function Checkout({ cart, setCart, session }) {
             />
 
             <input
-              type="text"
-              name="pincode"
-              placeholder="PIN Code"
-              value={form.pincode}
-              onChange={handleChange}
-              required
-            />
+  type="text"
+  name="pincode"
+  placeholder="PIN Code"
+  value={form.pincode}
+  onChange={handleChange}
+  maxLength="6"
+  pattern="[0-9]{6}"
+  title="Please enter a valid 6-digit PIN code"
+  required
+/>
 
             {/* PAYMENT METHOD */}
 
@@ -755,15 +789,30 @@ function Checkout({ cart, setCart, session }) {
 
             <div className="checkout-total">
 
-              <span>
-                Total
-              </span>
+  <span>
+    Total Items
+  </span>
 
-              <strong>
-                ₹{total}
-              </strong>
+  <strong>
+    {cart.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    )}
+  </strong>
 
-            </div>
+</div>
+
+<div className="checkout-total">
+
+  <span>
+    Total
+  </span>
+
+  <strong>
+    ₹{total}
+  </strong>
+
+</div>
 
           </div>
 

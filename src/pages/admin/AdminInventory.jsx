@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import AdminSidebar from "./AdminSidebar";
+import "./AdminInventory.css";
 
 function AdminInventory() {
   const [products, setProducts] = useState([]);
@@ -60,7 +61,7 @@ function AdminInventory() {
     <div>
       <AdminSidebar />
 
-      <div>
+      <div className="admin-page">
         <h1>Manage Inventory</h1>
 
         {loading ? (
@@ -68,7 +69,8 @@ function AdminInventory() {
         ) : products.length === 0 ? (
           <p>No products found.</p>
         ) : (
-          <table border="1" cellPadding="10">
+         <div className="inventory-table-container">
+         <table className="inventory-table">
             <thead>
               <tr>
                 <th>ID</th>
@@ -123,6 +125,7 @@ function AdminInventory() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

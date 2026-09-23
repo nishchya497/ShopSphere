@@ -1,0 +1,59 @@
+.admin-page {
+  margin-left: 240px;
+  padding: 30px;
+  min-height: 100vh;
+  background: #f3f4f6;
+  box-sizing: border-box;
+}
+
+.admin-page h1 {
+  margin-top: 0;
+  color: #111827;
+}
+
+.customers-table-container {
+  margin-top: 25px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.customers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.customers-table th,
+.customers-table td {
+  padding: 14px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.customers-table th {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.customers-table tr:hover {
+  background: #f9fafb;
+}
+
+.customer-role {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+@media (max-width: 700px) {
+  .admin-page {
+    margin-left: 0;
+    padding: 20px;
+  }
+}

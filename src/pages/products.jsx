@@ -29,12 +29,23 @@ function Products({
       return;
     }
 
+    const stock = Number(product.stock || 0);
+
+if (stock <= 0) {
+  alert("This product is currently out of stock.");
+  return;
+}
     const existingProduct = cart.find(
       (item) => item.id === product.id
     );
 
     if (existingProduct) {
-      const newQuantity = existingProduct.quantity + 1;
+  const newQuantity = existingProduct.quantity + 1;
+
+  if (newQuantity > stock) {
+    alert(`Only ${stock} item${stock === 1 ? "" : "s"} available in stock.`);
+    return;
+  }
 
       const { error } = await supabase
         .from("cart")
@@ -303,15 +314,35 @@ function Products({
 
                 <div className="product-bottom">
 
-                  <strong>
-                    ₹{product.price}
-                  </strong>
+  <div>
+    <strong>₹{product.price}</strong>
 
-                  <button className="add-cart" onClick={() => addToCart(product)}>
-                    + Cart
-                  </button>
+    {Number(product.stock || 0) === 0 ? (
+      <span className="product-stock out">
+        Out of Stock
+      </span>
+    ) : Number(product.stock || 0) <= 5 ? (
+      <span className="product-stock low">
+        Only {product.stock} left
+      </span>
+    ) : (
+      <span className="product-stock available">
+        In Stock
+      </span>
+    )}
+  </div>
 
-                </div>
+  <button
+    className="add-cart"
+    onClick={() => addToCart(product)}
+    disabled={Number(product.stock || 0) <= 0}
+  >
+    {Number(product.stock || 0) <= 0
+      ? "Out of Stock"
+      : "+ Cart"}
+  </button>
+
+</div>
 
               </div>
 

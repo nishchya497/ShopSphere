@@ -18,7 +18,14 @@ function Cart({ cart, setCart, session, authLoading }) {
 
   // Increase quantity
   const increaseQuantity = async (item) => {
-    const newQuantity = item.quantity + 1;
+  const stock = Number(item.stock || 0);
+
+  if (item.quantity >= stock) {
+    alert(`Only ${stock} item${stock === 1 ? "" : "s"} available in stock.`);
+    return;
+  }
+
+  const newQuantity = item.quantity + 1;
 
     const { error } = await supabase
       .from("cart")
@@ -170,8 +177,22 @@ function Cart({ cart, setCart, session, authLoading }) {
                     <p>{item.category}</p>
 
                     <strong>
-                      ₹{item.price}
-                    </strong>
+  ₹{item.price}
+</strong>
+
+{Number(item.stock || 0) === 0 ? (
+  <span className="cart-stock out">
+    Out of Stock
+  </span>
+) : Number(item.stock || 0) <= 5 ? (
+  <span className="cart-stock low">
+    Only {item.stock} left
+  </span>
+) : (
+  <span className="cart-stock available">
+    In Stock
+  </span>
+)}
 
                   </div>
 
@@ -190,12 +211,11 @@ function Cart({ cart, setCart, session, authLoading }) {
                     </span>
 
                     <button
-                      onClick={() =>
-                        increaseQuantity(item)
-                      }
-                    >
-                      +
-                    </button>
+  onClick={() => increaseQuantity(item)}
+  disabled={item.quantity >= Number(item.stock || 0)}
+>
+  +
+</button>
 
                   </div>
 

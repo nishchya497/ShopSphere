@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import AdminSidebar from "./AdminSidebar";
+import "./AdminCoupons.css";
 
 function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
@@ -75,12 +76,12 @@ function AdminCoupons() {
     <div>
       <AdminSidebar />
 
-      <div>
+      <div className="admin-page">
         <h1>Manage Coupons</h1>
 
         <h2>Add Coupon</h2>
 
-        <form onSubmit={addCoupon}>
+        <form onSubmit={addCoupon} className="admin-form">
           <input
             type="text"
             placeholder="Coupon Code"
@@ -149,7 +150,8 @@ function AdminCoupons() {
         ) : coupons.length === 0 ? (
           <p>No coupons found.</p>
         ) : (
-          <table border="1" cellPadding="10">
+          <div className="coupons-table-container">
+  <table className="coupons-table">
             <thead>
               <tr>
                 <th>Code</th>
@@ -164,7 +166,7 @@ function AdminCoupons() {
             <tbody>
               {coupons.map((coupon) => (
                 <tr key={coupon.id}>
-                  <td>{coupon.code}</td>
+                  <td className="coupon-code">{coupon.code}</td>
 
                   <td>{coupon.discount_type}</td>
 
@@ -193,6 +195,7 @@ function AdminCoupons() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
