@@ -6,8 +6,9 @@ import "./AdminProducts.css";
 function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
-const [categoryFilter, setCategoryFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -182,65 +183,73 @@ const [categoryFilter, setCategoryFilter] = useState("All");
     setStock(product.stock);
   };
 
+  // FILTER PRODUCTS
   const filteredProducts = products.filter((product) => {
-    const totalProducts = products.length;
-
-const inStockProducts = products.filter(
-  (product) => product.stock > 5
-).length;
-
-const lowStockProducts = products.filter(
-  (product) => product.stock > 0 && product.stock <= 5
-).length;
-
-const outOfStockProducts = products.filter(
-  (product) => product.stock === 0
-).length;
-  const matchesSearch =
-    product.name
+    const matchesSearch = product.name
       .toLowerCase()
       .includes(search.toLowerCase());
 
-  const matchesCategory =
-    categoryFilter === "All" ||
-    product.category === categoryFilter;
+    const matchesCategory =
+      categoryFilter === "All" ||
+      product.category === categoryFilter;
 
-  return matchesSearch && matchesCategory;
-});
+    return matchesSearch && matchesCategory;
+  });
+
+  // PRODUCT SUMMARY
+  const totalProducts = products.length;
+
+  const inStockProducts = products.filter(
+    (product) => product.stock > 5
+  ).length;
+
+  const lowStockProducts = products.filter(
+    (product) => product.stock > 0 && product.stock <= 5
+  ).length;
+
+  const outOfStockProducts = products.filter(
+    (product) => product.stock === 0
+  ).length;
+
   return (
     <div>
       <AdminSidebar />
 
       <div className="admin-page">
         <h1>Manage Products</h1>
+
+        {/* PRODUCT SUMMARY */}
+
         <div className="product-summary">
-  <div className="summary-card">
-    <span>Total Products</span>
-    <strong>{totalProducts}</strong>
-  </div>
+          <div className="summary-card">
+            <span>Total Products</span>
+            <strong>{totalProducts}</strong>
+          </div>
 
-  <div className="summary-card">
-    <span>In Stock</span>
-    <strong>{inStockProducts}</strong>
-  </div>
+          <div className="summary-card">
+            <span>In Stock</span>
+            <strong>{inStockProducts}</strong>
+          </div>
 
-  <div className="summary-card">
-    <span>Low Stock</span>
-    <strong>{lowStockProducts}</strong>
-  </div>
+          <div className="summary-card">
+            <span>Low Stock</span>
+            <strong>{lowStockProducts}</strong>
+          </div>
 
-  <div className="summary-card">
-    <span>Out of Stock</span>
-    <strong>{outOfStockProducts}</strong>
-  </div>
-</div>
+          <div className="summary-card">
+            <span>Out of Stock</span>
+            <strong>{outOfStockProducts}</strong>
+          </div>
+        </div>
+
+        {/* ADD / EDIT FORM */}
 
         <div className="admin-form">
           <h2>
-  {editingProduct
-    ? `Edit Product: ${editingProduct.name}`
-    : "Add New Product"}
-</h2>
+            {editingProduct
+              ? `Edit Product: ${editingProduct.name}`
+              : "Add New Product"}
+          </h2>
 
           <form
             onSubmit={editingProduct ? editProduct : addProduct}
@@ -310,50 +319,62 @@ const outOfStockProducts = products.filter(
 
             {editingProduct && (
               <button
-  type="button"
-  className="cancel-btn"
-  onClick={clearForm}
->
-  Cancel
-</button>
+                type="button"
+                className="cancel-btn"
+                onClick={clearForm}
+              >
+                Cancel
+              </button>
             )}
           </form>
         </div>
 
+        {/* PRODUCTS TABLE */}
+
         <div className="products-table-container">
           <h2>All Products</h2>
+
           <div className="product-filters">
-  <input
-    type="text"
-    placeholder="Search products..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
 
-  <select
-    value={categoryFilter}
-    onChange={(e) => setCategoryFilter(e.target.value)}
-  >
-    <option value="All">All Categories</option>
+            <select
+              value={categoryFilter}
+              onChange={(e) =>
+                setCategoryFilter(e.target.value)
+              }
+            >
+              <option value="All">All Categories</option>
 
-    {[...new Set(products.map((product) => product.category))]
-      .filter(Boolean)
-      .map((category) => (
-        <option key={category} value={category}>
-          {category}
-        </option>
-      ))}
-  </select>
-</div>
-<p className="product-count">
-  Showing {filteredProducts.length} product
-  {filteredProducts.length !== 1 ? "s" : ""}
-</p>
+              {[
+                ...new Set(
+                  products.map((product) => product.category)
+                ),
+              ]
+                .filter(Boolean)
+                .map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <p className="product-count">
+            Showing {filteredProducts.length} product
+            {filteredProducts.length !== 1 ? "s" : ""}
+          </p>
 
           {loading ? (
             <p>Loading products...</p>
           ) : products.length === 0 ? (
             <p>No products found.</p>
+          ) : filteredProducts.length === 0 ? (
+            <p>No products match your search or category.</p>
           ) : (
             <table className="products-table">
               <thead>
@@ -390,20 +411,20 @@ const outOfStockProducts = products.filter(
                     <td>{product.stock}</td>
 
                     <td>
-  {product.stock === 0 ? (
-    <span className="product-status out-of-stock">
-      Out of Stock
-    </span>
-  ) : product.stock <= 5 ? (
-    <span className="product-status low-stock">
-      Low Stock
-    </span>
-  ) : (
-    <span className="product-status in-stock">
-      In Stock
-    </span>
-  )}
-</td>
+                      {product.stock === 0 ? (
+                        <span className="product-status out-of-stock">
+                          Out of Stock
+                        </span>
+                      ) : product.stock <= 5 ? (
+                        <span className="product-status low-stock">
+                          Low Stock
+                        </span>
+                      ) : (
+                        <span className="product-status in-stock">
+                          In Stock
+                        </span>
+                      )}
+                    </td>
 
                     <td>
                       <button

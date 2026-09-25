@@ -81,3 +81,123 @@
     padding: 15px;
   }
 }
+.inventory-filters {
+  display: flex;
+  gap: 12px;
+  margin: 25px 0 10px;
+  flex-wrap: wrap;
+}
+
+.inventory-filters input,
+.inventory-filters select {
+  padding: 11px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  outline: none;
+  font-size: 14px;
+}
+
+.inventory-filters input {
+  width: 100%;
+  max-width: 450px;
+  box-sizing: border-box;
+}
+
+.inventory-filters input:focus,
+.inventory-filters select:focus {
+  border-color: #2563eb;
+}
+
+.inventory-count {
+  margin: 0 0 15px;
+  color: #6b7280;
+  font-size: 14px;
+}
+.inventory-status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inventory-status.in-stock {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.inventory-status.low-stock {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.inventory-status.out-of-stock {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 14px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.inventory-table th {
+  background: #f9fafb;
+  color: #374151;
+  font-size: 14px;
+}
+
+.inventory-table tr:hover {
+  background: #f9fafb;
+}
+
+.inventory-table input {
+  width: 90px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.inventory-table input:focus {
+  border-color: #2563eb;
+}
+
+.inventory-table button {
+  margin-left: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inventory-table button:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 700px) {
+  .inventory-table-container {
+    overflow-x: auto;
+  }
+
+  .inventory-table th,
+  .inventory-table td {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .inventory-table input {
+    width: 75px;
+  }
+}

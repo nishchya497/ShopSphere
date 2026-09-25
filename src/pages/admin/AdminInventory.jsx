@@ -6,6 +6,8 @@ import "./AdminInventory.css";
 function AdminInventory() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState("All");
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -57,12 +59,49 @@ function AdminInventory() {
     alert("Stock updated successfully!");
   };
 
+  const filteredProducts = products.filter((product) => {
+  const matchesSearch = product.name
+    .toLowerCase()
+    .includes(search.toLowerCase());
+
+  const matchesStock =
+    stockFilter === "All" ||
+    (stockFilter === "In Stock" && product.stock > 5) ||
+    (stockFilter === "Low Stock" &&
+      product.stock > 0 &&
+      product.stock <= 5) ||
+    (stockFilter === "Out of Stock" &&
+      product.stock === 0);
+
+  return matchesSearch && matchesStock;
+});
   return (
     <div>
       <AdminSidebar />
 
       <div className="admin-page">
         <h1>Manage Inventory</h1>
+        <div className="inventory-filters">
+  <input
+    type="text"
+    placeholder="Search products..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+  <select
+  value={stockFilter}
+  onChange={(e) => setStockFilter(e.target.value)}
+>
+  <option value="All">All Stock</option>
+  <option value="In Stock">In Stock</option>
+  <option value="Low Stock">Low Stock</option>
+  <option value="Out of Stock">Out of Stock</option>
+</select>
+</div>
+<p className="inventory-count">
+  Showing {filteredProducts.length} product
+  {filteredProducts.length !== 1 ? "s" : ""}
+</p>
 
         {loading ? (
           <p>Loading inventory...</p>
@@ -83,7 +122,7 @@ function AdminInventory() {
             </thead>
 
             <tbody>
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <tr key={product.id}>
                   <td>{product.id}</td>
 
@@ -115,12 +154,20 @@ function AdminInventory() {
                   </td>
 
                   <td>
-                    {product.stock === 0
-                      ? "Out of Stock"
-                      : product.stock <= 5
-                      ? "Low Stock"
-                      : "In Stock"}
-                  </td>
+  {product.stock === 0 ? (
+    <span className="inventory-status out-of-stock">
+      Out of Stock
+    </span>
+  ) : product.stock <= 5 ? (
+    <span className="inventory-status low-stock">
+      Low Stock
+    </span>
+  ) : (
+    <span className="inventory-status in-stock">
+      In Stock
+    </span>
+  )}
+</td>
                 </tr>
               ))}
             </tbody>
