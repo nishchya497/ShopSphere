@@ -4,116 +4,247 @@ import { supabase } from "../supabaseClient";
 import "./orders.css";
 
 function Orders({ session, authLoading }) {
-    const navigate = useNavigate();
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        if (authLoading) return;
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-        if (!session) {
-            alert("Please login to view your orders.");
-            navigate("/login");
-            return;
-        }
+  useEffect(() => {
+    if (authLoading) return;
 
-        const fetchOrders = async () => {
-            const { data, error } = await supabase
-                .from("orders")
-                .select("*")
-                .eq("user_id", session.user.id)
-                .order("created_at", { ascending: false });
-
-            if (error) {
-                console.error("Error fetching orders:", error);
-                return;
-            }
-
-            setOrders(data);
-            setLoading(false);
-        };
-
-        fetchOrders();
-    }, [session, authLoading, navigate]);
-
-    if (authLoading || loading) {
-        return <h2>Loading orders...</h2>;
+    if (!session) {
+      alert("Please login to view your orders.");
+      navigate("/login");
+      return;
     }
 
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError("");
+
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (error) {
+        console.error("Error fetching orders:", error);
+        setError("Unable to load your orders.");
+        setLoading(false);
+        return;
+      }
+
+      setOrders(data || []);
+      setLoading(false);
+    };
+
+    fetchOrders();
+  }, [session, authLoading, navigate]);
+
+  // -----------------------------
+  // LOADING
+  // -----------------------------
+
+  if (authLoading || loading) {
     return (
-        <div className="orders-page">
+      <div className="orders-loading">
+        <h2>Loading orders...</h2>
+      </div>
+    );
+  }
 
-            <nav className="orders-navbar">
-                <Link to="/" className="orders-logo">
-                    Shop<span>Sphere</span>
-                </Link>
+  // -----------------------------
+  // ERROR
+  // -----------------------------
 
-                <div>
-                    <Link to="/">Home</Link>
-                    <Link to="/products">Products</Link>
-                    <Link to="/orders">📦 Orders</Link>
-                    <Link to="/cart">🛒 Cart</Link>
-                </div>
-            </nav>
+  if (error) {
+    return (
+      <div className="orders-page">
+        <div className="orders-container">
+          <div className="orders-error">
+            <h2>Something went wrong</h2>
+            <p>{error}</p>
 
-            <div className="orders-container">
+            <button
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-                <h1>📦 My Orders</h1>
+  return (
+    <div className="orders-page">
 
-                {orders.length === 0 ? (
-                    <div className="empty-orders">
-                        <h2>No orders yet</h2>
-                        <p>Your placed orders will appear here.</p>
+      {/* NAVBAR */}
 
-                        <Link to="/products">
-                            Start Shopping
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="orders-list">
+      <nav className="orders-navbar">
+        <Link to="/" className="orders-logo">
+          Shop<span>Sphere</span>
+        </Link>
 
-                        {orders.map((order) => (
-                            <Link
-                                to={`/orders/${order.id}`}
-                                className="order-card"
-                                key={order.id}
-                            >
+        <div className="orders-nav-links">
+          <Link to="/">Home</Link>
+          <Link to="/products">Products</Link>
+          <Link to="/orders" className="active">
+            📦 Orders
+          </Link>
+          <Link to="/cart">🛒 Cart</Link>
+        </div>
+      </nav>
 
-                                <div className="order-header">
-                                    <h2>Order #{order.id}</h2>
+      {/* CONTENT */}
 
-                                    <span className="order-status">
-                                        {order.status}
-                                    </span>
-                                </div>
+      <div className="orders-container">
 
-                                <p>
-                                    <strong>Date:</strong>{" "}
-                                    {new Date(
-                                        order.created_at
-                                    ).toLocaleDateString()}
-                                </p>
+        <div className="orders-title">
+          <div>
+            <h1>📦 My Orders</h1>
+            <p>
+              View and track all your ShopSphere orders.
+            </p>
+          </div>
 
-                                <p>
-                                    <strong>Payment:</strong>{" "}
-                                    {order.payment_method.toUpperCase()}
-                                </p>
+          <Link
+            to="/products"
+            className="continue-shopping"
+          >
+            Continue Shopping
+          </Link>
+        </div>
 
-                                <p>
-                                    <strong>Total:</strong>{" "}
-                                    ₹{order.total_amount}
-                                </p>
+        {/* NO ORDERS */}
 
-                            </Link>
-                        ))}
-
-                    </div>
-                )}
-
+        {orders.length === 0 ? (
+          <div className="empty-orders">
+            <div className="empty-orders-icon">
+              📦
             </div>
 
-        </div>
-    );
+            <h2>No orders yet</h2>
+
+            <p>
+              You haven't placed any orders yet.
+              Start shopping to see your orders here.
+            </p>
+
+            <Link to="/products">
+              Start Shopping
+            </Link>
+          </div>
+        ) : (
+          <div className="orders-list">
+
+            {orders.map((order) => {
+
+              const status =
+                order.status || "Pending";
+
+              const payment =
+                order.payment_method || "Unknown";
+
+              return (
+                <div
+                  className="order-card"
+                  key={order.id}
+                >
+
+                  {/* ORDER HEADER */}
+
+                  <div className="order-header">
+
+                    <div>
+                      <h2>
+                        Order #{order.id}
+                      </h2>
+
+                      <span className="order-date">
+                        Placed on{" "}
+                        {new Date(
+                          order.created_at
+                        ).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`order-status ${status
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`}
+                    >
+                      {status}
+                    </span>
+
+                  </div>
+
+                  {/* ORDER INFORMATION */}
+
+                  <div className="order-info">
+
+                    <div className="order-info-item">
+                      <span>Payment</span>
+                      <strong>
+                        {payment.toUpperCase()}
+                      </strong>
+                    </div>
+
+                    <div className="order-info-item">
+                      <span>Total Amount</span>
+                      <strong>
+                        ₹
+                        {Number(
+                          order.total_amount || 0
+                        ).toFixed(2)}
+                      </strong>
+                    </div>
+
+                    <div className="order-info-item">
+                      <span>Order Status</span>
+                      <strong>{status}</strong>
+                    </div>
+
+                  </div>
+
+                  {/* FOOTER */}
+
+                  <div className="order-footer">
+
+                    <span>
+                      Order #{order.id}
+                    </span>
+
+                    <Link
+                      to={`/orders/${order.id}`}
+                      className="view-order-btn"
+                    >
+                      View Details →
+                    </Link>
+
+                  </div>
+
+                </div>
+              );
+            })}
+
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
 }
 
 export default Orders;
